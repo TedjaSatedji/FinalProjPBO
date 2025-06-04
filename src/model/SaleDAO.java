@@ -3,13 +3,10 @@ package model;
 import config.DBConnection;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
-// Note: Methods for retrieving sales are not implemented here for brevity but would be needed for reporting.
 
-/**
- * SaleDAO.java
- * Handles database operations for sales transactions.
- */
+
 public class SaleDAO {
     private Connection connection;
     private ProductDAO productDAO; // To update stock
@@ -17,45 +14,38 @@ public class SaleDAO {
     public SaleDAO() {
         try {
             this.connection = DBConnection.getConnection();
-            this.productDAO = new ProductDAO(); // Assuming ProductDAO is accessible
+            this.productDAO = new ProductDAO();
         } catch (SQLException e) {
             System.err.println("SaleDAO: Failed to connect to database.");
             e.printStackTrace();
         }
     }
 
-    /**
-     * Saves a sale and its items to the database.
-     * This should ideally be a transaction to ensure atomicity.
-     * @param sale The Sale object to save.
-     * @return true if the sale was saved successfully, false otherwise.
-     */
+
     public boolean recordSale(Sale sale) {
-        String insertSaleSQL = "INSERT INTO sales (total_amount, cashier_name) VALUES (?, ?)";
+        String insertSaleSQL = "INSERT INTO sales (total_amount, cashier_name, sale_date) VALUES (?, ?, ?)"; // Added sale_date
         String insertSaleItemSQL = "INSERT INTO sale_items (sale_id, product_id, quantity_sold, price_per_unit, subtotal) VALUES (?, ?, ?, ?, ?)";
         String updateStockSQL = "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?";
 
         try {
-            // Start transaction
             connection.setAutoCommit(false);
 
-            // 1. Insert into 'sales' table
             PreparedStatement salePstmt = connection.prepareStatement(insertSaleSQL, Statement.RETURN_GENERATED_KEYS);
             salePstmt.setDouble(1, sale.getTotalAmount());
-            salePstmt.setString(2, sale.getCashierName()); // Can be null
+            salePstmt.setString(2, sale.getCashierName());
+            salePstmt.setTimestamp(3, sale.getSaleDate()); // Set the sale date
             int affectedRows = salePstmt.executeUpdate();
 
             if (affectedRows == 0) {
-                connection.rollback(); // Rollback if sale record failed
+                connection.rollback();
                 return false;
             }
 
-            // Get the generated sale_id
             int generatedSaleId;
             try (ResultSet generatedKeys = salePstmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     generatedSaleId = generatedKeys.getInt(1);
-                    sale.setSaleId(generatedSaleId); // Set it back to the Sale object
+                    sale.setSaleId(generatedSaleId);
                 } else {
                     connection.rollback();
                     throw new SQLException("Creating sale failed, no ID obtained.");
@@ -63,21 +53,17 @@ public class SaleDAO {
             }
             salePstmt.close();
 
-            // 2. Insert each item into 'sale_items' table and update stock
             PreparedStatement itemPstmt = connection.prepareStatement(insertSaleItemSQL);
             PreparedStatement stockPstmt = connection.prepareStatement(updateStockSQL);
 
             for (SaleItem item : sale.getItems()) {
-                // Check stock before attempting to update
                 Product product = productDAO.getProductById(item.getProductId());
                 if (product == null || product.getStock() < item.getQuantitySold()) {
                     connection.rollback();
                     System.err.println("Insufficient stock for product ID: " + item.getProductId());
-                    // You should throw a custom exception or return a specific error code/message here
-                    throw new SQLException("Insufficient stock for product: " + item.getProductName());
+                    throw new SQLException("Insufficient stock for product: " + (product != null ? product.getName() : "ID " + item.getProductId()));
                 }
 
-                // Insert into sale_items
                 itemPstmt.setInt(1, generatedSaleId);
                 itemPstmt.setInt(2, item.getProductId());
                 itemPstmt.setInt(3, item.getQuantitySold());
@@ -85,16 +71,14 @@ public class SaleDAO {
                 itemPstmt.setDouble(5, item.getSubtotal());
                 itemPstmt.addBatch();
 
-                // Prepare stock update
                 stockPstmt.setInt(1, item.getQuantitySold());
                 stockPstmt.setInt(2, item.getProductId());
-                stockPstmt.setInt(3, item.getQuantitySold()); // Ensure stock doesn't go negative due to concurrent ops
+                stockPstmt.setInt(3, item.getQuantitySold());
                 stockPstmt.addBatch();
             }
             itemPstmt.executeBatch();
             stockPstmt.executeBatch();
 
-            // Commit transaction
             connection.commit();
             return true;
 
@@ -113,12 +97,61 @@ public class SaleDAO {
         } finally {
             try {
                 if (connection != null) {
-                    connection.setAutoCommit(true); // Reset auto-commit
+                    connection.setAutoCommit(true);
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
         }
     }
-    // Add methods like getSaleById, getAllSales, getSalesByDateRange etc. for reporting features.
+
+
+    public List<Sale> getAllSales() {
+        List<Sale> salesList = new ArrayList<>();
+        String sql = "SELECT * FROM sales ORDER BY sale_date DESC"; // Show newest first
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Sale sale = new Sale();
+                sale.setSaleId(rs.getInt("sale_id"));
+                sale.setSaleDate(rs.getTimestamp("sale_date"));
+                sale.setTotalAmount(rs.getDouble("total_amount"));
+                sale.setCashierName(rs.getString("cashier_name"));
+                // Note: Sale items are not loaded here for performance. Load them on demand.
+                salesList.add(sale);
+            }
+        } catch (SQLException e) {
+            System.err.println("SaleDAO: Error retrieving all sales.");
+            e.printStackTrace();
+        }
+        return salesList;
+    }
+
+
+    public List<SaleItem> getSaleItemsBySaleId(int saleId) {
+        List<SaleItem> saleItems = new ArrayList<>();
+        // Join with products table to get product name for display
+        String sql = "SELECT si.*, p.name as product_name FROM sale_items si " +
+                "JOIN products p ON si.product_id = p.id " +
+                "WHERE si.sale_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, saleId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                SaleItem item = new SaleItem();
+                item.setSaleItemId(rs.getInt("sale_item_id"));
+                item.setSaleId(rs.getInt("sale_id"));
+                item.setProductId(rs.getInt("product_id"));
+                item.setProductName(rs.getString("product_name")); // Get product name from join
+                item.setQuantitySold(rs.getInt("quantity_sold"));
+                item.setPricePerUnit(rs.getDouble("price_per_unit"));
+                item.setSubtotal(rs.getDouble("subtotal"));
+                saleItems.add(item);
+            }
+        } catch (SQLException e) {
+            System.err.println("SaleDAO: Error retrieving sale items for sale ID: " + saleId);
+            e.printStackTrace();
+        }
+        return saleItems;
+    }
 }

@@ -1,12 +1,6 @@
 package model;
 
-/**
- * ElectronicProduct.java (Model)
- * Represents an electronic product, inheriting from the updated Product class.
- * Demonstrates Inheritance and Polymorphism.
- * Unique attributes (brand, warrantyPeriod) are part of the class but not
- * directly stored in separate columns in the simplified 'products' table from the document.
- */
+
 public class ElectronicProduct extends Product {
     private String brand;       // Example: "Samsung", "LG"
     private int warrantyPeriod; // Example: 12 (in months)
@@ -43,11 +37,7 @@ public class ElectronicProduct extends Product {
         this.warrantyPeriod = warrantyPeriod;
     }
 
-    /**
-     * Overrides getDisplayInfo to include electronics-specific information.
-     * Demonstrates Polymorphism.
-     * @return String containing detailed product information.
-     */
+
     @Override
     public String getDisplayInfo() {
         return super.getDisplayInfo() +

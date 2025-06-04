@@ -6,11 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ProductDAO.java (Model - Data Access Object)
- * Handles CRUD operations for Product objects, aligned with the document's schema.
- * (id, name, category, stock, price, supplier)
- */
+
 public class ProductDAO {
 
     private Connection connection;
@@ -25,11 +21,7 @@ public class ProductDAO {
         }
     }
 
-    /**
-     * Adds a new product to the database.
-     * @param product The Product object to add.
-     * @return true if the product was added successfully, false otherwise.
-     */
+
     public boolean addProduct(Product product) {
         // SQL query based on the document's table structure
         String sql = "INSERT INTO products (name, category, stock, price, supplier) VALUES (?, ?, ?, ?, ?)";
@@ -56,11 +48,7 @@ public class ProductDAO {
         return false;
     }
 
-    /**
-     * Retrieves a product by its ID.
-     * @param productId The ID of the product to retrieve.
-     * @return The Product object if found, null otherwise.
-     */
+
     public Product getProductById(int productId) {
         String sql = "SELECT * FROM products WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -76,10 +64,7 @@ public class ProductDAO {
         return null;
     }
 
-    /**
-     * Retrieves all products from the database.
-     * @return A list of all Product objects.
-     */
+
     public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products"; // Order by name for better display
@@ -95,11 +80,6 @@ public class ProductDAO {
         return products;
     }
 
-    /**
-     * Updates an existing product in the database.
-     * @param product The Product object with updated information.
-     * @return true if the product was updated successfully, false otherwise.
-     */
     public boolean updateProduct(Product product) {
         String sql = "UPDATE products SET name = ?, category = ?, stock = ?, price = ?, supplier = ? WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -118,11 +98,7 @@ public class ProductDAO {
         return false;
     }
 
-    /**
-     * Deletes a product from the database by its ID.
-     * @param productId The ID of the product to delete.
-     * @return true if the product was deleted successfully, false otherwise.
-     */
+
     public boolean deleteProduct(int productId) {
         String sql = "DELETE FROM products WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -135,12 +111,7 @@ public class ProductDAO {
         return false;
     }
 
-    /**
-     * Searches for products by name or category.
-     * @param searchTerm The term to search for.
-     * @param searchBy "name" or "category".
-     * @return A list of matching Product objects.
-     */
+
     public List<Product> searchProducts(String searchTerm, String searchBy) {
         List<Product> products = new ArrayList<>();
         String sql;
@@ -166,13 +137,7 @@ public class ProductDAO {
     }
 
 
-    /**
-     * Helper method to map a ResultSet row to a Product object.
-     * It can instantiate subclasses based on the 'category' field if needed for polymorphism.
-     * @param rs The ResultSet to map.
-     * @return A Product object (or a subclass like ElectronicProduct, ClothingProduct).
-     * @throws SQLException if a database access error occurs.
-     */
+
     private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String name = rs.getString("name");

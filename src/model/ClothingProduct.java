@@ -1,12 +1,6 @@
 package model;
 
-/**
- * ClothingProduct.java (Model)
- * Represents a clothing product, inheriting from the updated Product class.
- * Demonstrates Inheritance and Polymorphism.
- * Unique attributes (size, color, material) are part of the class but not
- * directly stored in separate columns in the simplified 'products' table from the document.
- */
+
 public class ClothingProduct extends Product {
     private String size;     // Example: "M", "L", "XL"
     private String color;    // Example: "Blue", "Red"
@@ -49,11 +43,7 @@ public class ClothingProduct extends Product {
         this.material = material;
     }
 
-    /**
-     * Overrides getDisplayInfo to include clothing-specific information.
-     * Demonstrates Polymorphism.
-     * @return String containing detailed product information.
-     */
+
     @Override
     public String getDisplayInfo() {
         return super.getDisplayInfo() +

@@ -1,9 +1,6 @@
 package model;
 
-/**
- * SaleItem.java (Model)
- * Represents an individual item within a sales transaction.
- */
+
 public class SaleItem {
     private int saleItemId;
     private int saleId; // Foreign key to Sale

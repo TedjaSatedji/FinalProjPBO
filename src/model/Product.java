@@ -1,11 +1,6 @@
 package model;
 
-/**
- * Product.java (Model)
- * Base class for a product, aligned with the document's specification.
- * Attributes: id, name, category, stock, price, supplier.
- * Demonstrates Encapsulation. Serves as a parent for Inheritance/Polymorphism.
- */
+
 public class Product {
     private int id;
     private String name;
@@ -82,12 +77,7 @@ public class Product {
         this.supplier = supplier;
     }
 
-    /**
-     * Provides a string representation of the product's details.
-     * This method is intended to be overridden by subclasses (Polymorphism),
-     * as suggested by "displayInfo()" in the document.
-     * @return String containing product details.
-     */
+
     public String getDisplayInfo() {
         return "ID: " + id +
                 ", Name: " + name +
