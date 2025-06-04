@@ -1,0 +1,105 @@
+package model;
+
+/**
+ * Product.java (Model)
+ * Base class for a product, aligned with the document's specification.
+ * Attributes: id, name, category, stock, price, supplier.
+ * Demonstrates Encapsulation. Serves as a parent for Inheritance/Polymorphism.
+ */
+public class Product {
+    private int id;
+    private String name;
+    private String category;
+    private int stock;
+    private double price;
+    private String supplier;
+
+    // Constructors
+    public Product() {
+    }
+
+    public Product(int id, String name, String category, int stock, double price, String supplier) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.stock = stock;
+        this.price = price;
+        this.supplier = supplier;
+    }
+
+    // Getters and Setters (Encapsulation)
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        if (stock < 0) {
+            throw new IllegalArgumentException("Stock cannot be negative.");
+        }
+        this.stock = stock;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        if (price < 0) {
+            throw new IllegalArgumentException("Price cannot be negative.");
+        }
+        this.price = price;
+    }
+
+    public String getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
+    }
+
+    /**
+     * Provides a string representation of the product's details.
+     * This method is intended to be overridden by subclasses (Polymorphism),
+     * as suggested by "displayInfo()" in the document.
+     * @return String containing product details.
+     */
+    public String getDisplayInfo() {
+        return "ID: " + id +
+                ", Name: " + name +
+                ", Category: " + category +
+                ", Stock: " + stock +
+                ", Price: " + String.format("%.2f", price) + // Format price
+                ", Supplier: " + supplier;
+    }
+
+    @Override
+    public String toString() {
+        // Useful for JComboBox or JList, often just the name is sufficient.
+        return getName();
+    }
+}
