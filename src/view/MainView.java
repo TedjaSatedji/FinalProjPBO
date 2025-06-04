@@ -20,6 +20,7 @@ public class MainView extends JFrame {
     private JTextField stockField;
     private JTextField priceField;
     private JTextField supplierField;
+    private JButton backToMenuButton; // New button
 
     private JButton addButton;
     private JButton updateButton;
@@ -57,6 +58,7 @@ public class MainView extends JFrame {
         updateButton = new JButton("Update Product");
         deleteButton = new JButton("Delete Product");
         clearButton = new JButton("Clear Fields");
+        backToMenuButton = new JButton("Back to Main Menu");
 
         searchField = new JTextField(15);
         searchCategoryComboBox = new JComboBox<>(new String[]{"Name", "Category"});
@@ -134,6 +136,11 @@ public class MainView extends JFrame {
         JScrollPane scrollPane = new JScrollPane(productTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Product List"));
         add(scrollPane, BorderLayout.CENTER);
+
+        // --- Back to Menu Button (Bottom) --
+        JPanel bottomButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bottomButtonPanel.add(backToMenuButton);
+        add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
     // --- Getters for Controller ---
@@ -213,5 +220,8 @@ public class MainView extends JFrame {
     public void addSearchButtonListener(java.awt.event.ActionListener listener) { searchButton.addActionListener(listener); }
     public void addProductTableSelectionListener(javax.swing.event.ListSelectionListener listener) {
         productTable.getSelectionModel().addListSelectionListener(listener);
+    }
+    public void addBackToMenuButtonListener(java.awt.event.ActionListener listener) {
+        backToMenuButton.addActionListener(listener);
     }
 }

@@ -1,7 +1,8 @@
 package controller;
 
-import model.*; // Imports Product, ElectronicProduct, ClothingProduct, ProductDAO
-import view.MainView; // Updated to use MainView
+import model.*;
+import view.MainView;
+import main.Main; // Import Main class to call showRoleSelection
 
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -9,11 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-/**
- * ProductController.java (Controller)
- * Connects MainView with ProductDAO and handles application logic,
- * aligned with the document's specifications.
- */
 public class ProductController {
     private MainView view;
     private ProductDAO dao;
@@ -22,25 +18,24 @@ public class ProductController {
         this.view = view;
         this.dao = dao;
 
-        // Attach listeners
         this.view.addAddButtonListener(new AddProductListener());
         this.view.addUpdateButtonListener(new UpdateProductListener());
         this.view.addDeleteButtonListener(new DeleteProductListener());
         this.view.addClearButtonListener(new ClearFieldsListener());
-        this.view.addSearchButtonListener(new SearchProductListener()); // Listener for search
+        this.view.addSearchButtonListener(new SearchProductListener());
         this.view.addProductTableSelectionListener(new TableRowSelectionListener());
+        this.view.addBackToMenuButtonListener(new BackToMenuListener()); // Listener for Back to Menu
 
-        loadAllProducts(); // Initial data load
+        loadAllProducts();
     }
 
     private void loadAllProducts() {
         List<Product> products = dao.getAllProducts();
         view.displayProducts(products);
-        view.clearInputFields(); // Clear fields after loading all
+        view.clearInputFields();
     }
 
     // --- Listener Inner Classes ---
-
     class AddProductListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -60,19 +55,14 @@ public class ProductController {
                     return;
                 }
 
-                // Create the appropriate Product subclass based on category for polymorphism
                 Product product;
                 if ("Electronics".equalsIgnoreCase(category)) {
-                    // Attributes like brand/warranty are not in the simple DB table,
-                    // so they are not taken from view fields here for DB persistence.
-                    // We can pass null/default or not set them if they are only for in-memory polymorphism.
                     product = new ElectronicProduct(0, name, stock, price, supplier, "DefaultBrand", 0);
                 } else if ("Clothing".equalsIgnoreCase(category)) {
                     product = new ClothingProduct(0, name, stock, price, supplier, "N/A", "N/A", "N/A");
                 } else {
                     product = new Product(0, name, category, stock, price, supplier);
                 }
-
 
                 if (dao.addProduct(product)) {
                     view.showMessage("Product added successfully! ID: " + product.getId());
@@ -168,11 +158,11 @@ public class ProductController {
         @Override
         public void actionPerformed(ActionEvent e) {
             String searchTerm = view.getSearchTerm();
-            String searchBy = view.getSearchCategory().toLowerCase(); // "name" or "category"
+            String searchBy = view.getSearchCategory().toLowerCase();
 
             if (searchTerm.isEmpty()) {
                 view.showMessage("Please enter a search term.");
-                loadAllProducts(); // Show all if search term is empty
+                loadAllProducts();
                 return;
             }
             List<Product> products = dao.searchProducts(searchTerm, searchBy);
@@ -183,19 +173,17 @@ public class ProductController {
         }
     }
 
-
     class ClearFieldsListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             view.clearInputFields();
-            loadAllProducts(); // Optionally reload all products when clearing
+            loadAllProducts();
         }
     }
 
     class TableRowSelectionListener implements ListSelectionListener {
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            // Prevent handling multiple events for one selection
             if (!e.getValueIsAdjusting() && view.getProductTable().getSelectedRow() != -1) {
                 int selectedRow = view.getProductTable().getSelectedRow();
 
@@ -206,8 +194,16 @@ public class ProductController {
                 view.setPriceFieldText(view.getTableModel().getValueAt(selectedRow, 4).toString());
                 view.setSupplierFieldText(view.getTableModel().getValueAt(selectedRow, 5).toString());
 
-                view.setUpdateDeleteButtonState(true); // Enable update/delete buttons
+                view.setUpdateDeleteButtonState(true);
             }
+        }
+    }
+
+    class BackToMenuListener implements ActionListener { // Listener for the "Back to Main Menu" button
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            view.dispose(); // Close the current inventory view (MainView)
+            Main.showRoleSelection(); // Call the static method in Main to show role selection dialog
         }
     }
 }
